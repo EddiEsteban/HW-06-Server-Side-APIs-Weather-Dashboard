@@ -18,11 +18,11 @@
     </nav>
     <div class='container'>
         <div class="row">
-            <div class="col-sm-12 col-md-3">
+            <div class="col-sm-12 col-md-3 mb-2" style='padding:0px'>
                 <aside>
                     <form>
                         <label for='searchCity'>Search City</label>
-                        <input value='Ottawa' type="text" class='form-control' id='searchCity' placeholder='Toronto'>
+                        <input type="text" class='form-control' id='searchCity' placeholder='Toronto'>
                         <button type="submit" class='btn btn-primary' onClick='getWeatherBySearch(event)'>Get Weather</button>
                     </form>
                     <hr/>
@@ -30,13 +30,12 @@
                     </div>
                 </aside>
             </div>
-            <div class="col-sm-12 col-md-9">
+            <div class="col-sm-12 col-md-9 no-gutters" style='padding:0px'>
                 <div class="tab-content" id="history-tabsContent">
                 </div>
             </div>
         </div>
-        
-        
+        <div style="display:none" id='storage'></div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
     <script src='./assets/scripts/script.js'></script>

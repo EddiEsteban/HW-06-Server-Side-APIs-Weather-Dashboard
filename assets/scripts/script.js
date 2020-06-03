@@ -1,6 +1,7 @@
 // Weather Dashboard Javascript
 
 const apiKey = `1ce59021adc60bfb56bfd66711ffdf31`
+var uviValue
 
 function generateApiObject(city){
     const weatherAPI = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}`
@@ -11,13 +12,24 @@ function generateApiObject(city){
     return {weather: weatherAPI, forecast: forecastAPI}
 }
 async function fetchData(city, property){
-    uvObj = await fetchUv(city)
+    let uvObj = await fetchUv(city)
+    console.log(uvObj)
+    document.querySelector('#storage').innerHTML = `<div id='storage-uvi'>${!(typeof uvObj === 'undefined') ? uvObj.value : -1}</div>`
     return await fetch(generateApiObject(city)[property])
-        .then(response => response.ok ? response.json() : Promise.reject(response))
+        // .then(response => response.ok ? response.json() : Promise.reject(response))
+        .then(function(response){
+            if (response.ok) {
+                outputJson = response.json()
+                // the below method to save fetch values for later reference is silly but the method my instructor showed me, wrapping everything in an async main() function
+                // is sillier and also didn't work
+                uviValue = Number(document.querySelector('#storage-uvi').innerHTML) 
+                return outputJson
+            } else {Promise.reject(response)}
+        })
         .catch(error => console.warn(error))
 }
 
-var coords
+
 
 async function fetchUv(city){
     // retrieve coordinates from weather API
@@ -28,8 +40,6 @@ async function fetchUv(city){
     return await fetch(weatherAPI)
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(function(dataCoordsSource){
-            console.log(dataCoordsSource.coord.lat)
-            console.log({lat: dataCoordsSource.coord.lat, lon: dataCoordsSource.coord.lon})
             coords = {lat: dataCoordsSource.coord.lat, lon: dataCoordsSource.coord.lon}
             return fetch(`http://api.openweathermap.org/data/2.5/uvi?appid=${apiKey}&lat=${coords.lat}&lon=${coords.lon}`)
         }
@@ -40,7 +50,6 @@ async function fetchUv(city){
     
 }
 
-fetchUv('Toronto')
 
 let defaultHistory = ['Toronto', 
     'Ottawa', 
@@ -75,7 +84,7 @@ function tabBuild(focus, selfIndex, targetIndex=selfIndex){
 function contentBuild(focus, selfIndex, sourceIndex, weatherContent='', forecastContent=''){
     
     return `<div 
-    class="tab-pane fade${focus ? ' show active' : ''}" 
+    class="tab-pane ${focus ? ' show active' : ''}" 
     id="tabContent-${selfIndex}" 
     role="tabpanel" 
     aria-labelledby="tab-${sourceIndex}">`
@@ -91,30 +100,40 @@ function contentBuild(focus, selfIndex, sourceIndex, weatherContent='', forecast
 async function weatherContentBuild(selectionTarget){
     // city name, the date, an icon representation of weather conditions, the temperature, the humidity, the wind speed, and the UV index
     let weatherObj = await fetchData(selectionTarget, 'weather')
-    return `<div><hgroup><h5 id='cityName'>${weatherObj.name}</h5><h6 id='date'>${moment.unix(weatherObj.dt).format("MM/DD/YYYY")}</h6></hgroup></div>`
-        +`<img id='icon' src='http://openweathermap.org/img/wn/${weatherObj.weather[0].icon}@2x.png' alt='${weatherObj.weather[0].main}: ${weatherObj.weather[0].description}'>`
-        +`<div id='temp'>${Math.round(weatherObj.main.temp - 273.15)}°C</div>`
-        +`<div id='humidity'>${weatherObj.main.humidity}%</div>`
-        +`<div id='wind-speed'>${weatherObj.wind.speed}km/h</div>`
-        +`<div id='uv-index'></div>`
+    let uviColour
+    if (uviValue == -1){uviColour = ''; uviValue = 'N/A'} 
+    else if (uviValue <= 2){uviColour = '#299501'}
+    else if (uviValue <= 5){uviColour = '#F7E401'}
+    else if (uviValue <= 7){uviColour = '#F95901'}
+    else if (uviValue <= 10){uviColour = '#D90011'}
+    else (uviColour = '#6C49CB')
+    return `<div class='card m-1'><div><hgroup><h5 id='cityName'>${weatherObj.name}</h5><h6 id='date'>${moment.unix(weatherObj.dt).format("MM/DD/YYYY")}</h6></hgroup></div>`
+        +`<div><img id='icon' src='http://openweathermap.org/img/wn/${weatherObj.weather[0].icon}@2x.png' alt='${weatherObj.weather[0].main}: ${weatherObj.weather[0].description}'></div>`
+        +`<div id='temp'><strong>Temperature: </strong>${Math.round(weatherObj.main.temp - 273.15)}°C</div>`
+        +`<div id='humidity'><strong>Humidity: </strong>${weatherObj.main.humidity}%</div>`
+        +`<div id='wind-speed'><strong>Wind Speed: </strong>${weatherObj.wind.speed}km/h</div>`
+        +`<div id='uv-index'><strong>UV Index: </strong><span style='background-color:${uviColour};' >&nbsp;${uviValue}&nbsp;</span></div></div>`
 }
 
 async function forecastContentBuild(selectionTarget){
+    // date, an icon representation of weather conditions, the temperature, and the humidity
     let forecastObj = await fetchData(selectionTarget, 'forecast')
     function buildForecastCard(forecastObj, index){
-        return `<div class="card text-white bg-primary mb-3"` 
+        forecastedDay = forecastObj.list[8*index]
+        return `<div class='col-sm-4 col-xl no-gutters'><div class="card text-white bg-primary m-1"` 
         + `style="max-width: 18rem;"`
         + `id='forecast-${index}'>`
-            + `<div class="card-header">${forecastObj[index]}</div>`
+            + `<div class="card-header">${moment.unix(forecastedDay.dt).format("MM/DD/YYYY")}</div>`
             + `<div class="card-body">`
-                + `<h5 class="card-title">Primary card title</h5>`
-                + `<p class="card-text">${forecastObj[index]}</p>`
+                + `<img id='icon' src='http://openweathermap.org/img/wn/${forecastedDay.weather[0].icon}@2x.png' alt='${forecastedDay.weather[0].main}: ${forecastedDay.weather[0].description}'>`
+                + `<h5 class="card-title"><strong>Temp: </strong>${Math.round(forecastedDay.main.temp - 273.15)}°C</h5>`
+                + `<p class="card-text"><strong>Humidity:</strong> ${forecastedDay.main.humidity}%</p>`
                 + `</div>`
-        + `</div>`
+        + `</div></div>`
     }
     cards = ''
     for (i = 0; i < 5; i++) {cards += buildForecastCard(forecastObj, i)}
-    return `<div>`
+    return `<div class='row no-gutters'>`
         + cards
         +`</div>`
 }
@@ -133,6 +152,8 @@ updateContent()
 
 function getWeatherBySearch(event){
     event.preventDefault()
+
+    // target entry, focus, and blank
     inputEl = document.querySelector('#searchCity')
     searchQuery = inputEl.value
     inputEl.focus() 
@@ -145,6 +166,9 @@ function getWeatherBySearch(event){
         .map((s) => s.charAt(0).toUpperCase() + s.substring(1))
         .join(' ')
     
+    updateContent()
+
+    // resort taba
     if (!cityHistory.includes(searchQuery)){
         cityHistory.unshift(searchQuery)
         cityHistory.pop()
@@ -156,9 +180,8 @@ function getWeatherBySearch(event){
         console.log('else: ', JSON.stringify(cityHistory))
     }
     
-    buildHistoryTabs()
+    
     localStorage.cityHistory = JSON.stringify(cityHistory)
-    updateContent()
     
 }
 
