@@ -2,6 +2,7 @@
 
 const apiKey = `1ce59021adc60bfb56bfd66711ffdf31`
 var uviValue
+localStorage.exists = 'true'
 
 function generateApiObject(city){
     const weatherAPI = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}`
@@ -13,18 +14,16 @@ function generateApiObject(city){
 }
 async function fetchData(city, property){
     let uvObj = await fetchUv(city)
-    console.log(uvObj)
-    document.querySelector('#storage').innerHTML = `<div id='storage-uvi'>${!(typeof uvObj === 'undefined') ? uvObj.value : -1}</div>`
+    localStorage.uvi = `${!(typeof uvObj === 'undefined') ? uvObj.value : -1}`
     return await fetch(generateApiObject(city)[property])
         // .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(function(response){
             if (response.ok) {
                 outputJson = response.json()
-                // the below method to save fetch values for later reference is silly but the method my instructor showed me, wrapping everything in an async main() function
-                // is sillier and also didn't work
-                uviValue = Number(document.querySelector('#storage-uvi').innerHTML) 
+                uviValue = Number(localStorage.uvi) 
+                localStorage.exists = 'true'
                 return outputJson
-            } else {Promise.reject(response)}
+            } else {Promise.reject(localStorage.exists = 'false')}
         })
         .catch(error => console.warn(error))
 }
@@ -35,10 +34,10 @@ async function fetchUv(city){
     // retrieve coordinates from weather API
     // then retrieve UV API
     const weatherAPI = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}`
-    
     var coords
+
     return await fetch(weatherAPI)
-        .then(response => response.ok ? response.json() : Promise.reject(response))
+        .then(response => response.ok ? response.json() : Promise.reject(localStorage.exists = 'false'))
         .then(function(dataCoordsSource){
             coords = {lat: dataCoordsSource.coord.lat, lon: dataCoordsSource.coord.lon}
             return fetch(`http://api.openweathermap.org/data/2.5/uvi?appid=${apiKey}&lat=${coords.lat}&lon=${coords.lon}`)
@@ -150,7 +149,7 @@ async function buildHistoryTabs(){
 buildHistoryTabs()
 updateContent()
 
-function getWeatherBySearch(event){
+async function getWeatherBySearch(event){
     event.preventDefault()
 
     // target entry, focus, and blank
@@ -166,22 +165,26 @@ function getWeatherBySearch(event){
         .map((s) => s.charAt(0).toUpperCase() + s.substring(1))
         .join(' ')
     
-    updateContent()
+    
+    
+    // resort tabs
 
-    // resort taba
-    if (!cityHistory.includes(searchQuery)){
-        cityHistory.unshift(searchQuery)
-        cityHistory.pop()
-    } else {
-        oldIndex = cityHistory.indexOf(searchQuery)
-        cityHistory.unshift(searchQuery)
-        console.log('else: ', JSON.stringify(cityHistory))
-        cityHistory.splice(oldIndex + 1, 1)
-        console.log('else: ', JSON.stringify(cityHistory))
+    await fetchData(searchQuery, 'weather')
+    if (localStorage.exists == 'true'){
+        if (!cityHistory.includes(searchQuery)){
+            cityHistory.unshift(searchQuery)
+            cityHistory.pop()
+        } else {
+            oldIndex = cityHistory.indexOf(searchQuery)
+            cityHistory.unshift(searchQuery)
+            cityHistory.splice(oldIndex + 1, 1)
+        }
+        
+        
+        localStorage.cityHistory = JSON.stringify(cityHistory)
+        updateContent()
+        buildHistoryTabs()
     }
-    
-    
-    localStorage.cityHistory = JSON.stringify(cityHistory)
     
 }
 
@@ -189,7 +192,6 @@ async function getWeatherByHistory(event){
     if (event.target.matches('a')){
         event.preventDefault()
         clickQuery = event.target.innerHTML
-        console.log(clickQuery)
         await updateContent(clickQuery)
     }
 }
