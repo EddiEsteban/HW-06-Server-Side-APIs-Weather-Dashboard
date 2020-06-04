@@ -1,6 +1,6 @@
 # Weather Dashboard
 
-This app allows you to retrieve weather and 5-day forecast information for a given location. Retrieves information from (OpenWeather's API)[https://openweathermap.org/api]. The 10 most recent search queries are locally saved, and revisiting the site will return these 10 in history sidebar; the weather and forecast content for the most recently searched item will be displayed immediately. The weather and forecast information can be quickly re-retrieved from these recent search queries by clicking them in the history sidebar.
+This app allows you to retrieve weather and 5-day forecast information for a given location. Retrieves information from [OpenWeather's API](https://openweathermap.org/api). The 10 most recent search queries are locally saved, and revisiting the site will return these 10 in history sidebar; the weather and forecast content for the most recently searched item will be displayed immediately. The weather and forecast information can be quickly re-retrieved from these recent search queries by clicking them in the history sidebar.
 
 ## Usage
 
