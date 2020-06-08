@@ -40,7 +40,7 @@ async function fetchUv(city){
         .then(response => response.ok ? response.json() : Promise.reject(localStorage.exists = 'false'))
         .then(function(dataCoordsSource){
             coords = {lat: dataCoordsSource.coord.lat, lon: dataCoordsSource.coord.lon}
-            return fetch(`http://api.openweathermap.org/data/2.5/uvi?appid=${apiKey}&lat=${coords.lat}&lon=${coords.lon}`)
+            return fetch(`https://api.openweathermap.org/data/2.5/uvi?appid=${apiKey}&lat=${coords.lat}&lon=${coords.lon}`)
         }
         )
         .then(response => response.ok ? response.json() : Promise.reject(response))
@@ -107,7 +107,7 @@ async function weatherContentBuild(selectionTarget){
     else if (uviValue <= 10){uviColour = '#D90011'}
     else (uviColour = '#6C49CB')
     return `<div class='card m-1'><div><hgroup><h5 id='cityName'>${weatherObj.name}</h5><h6 id='date'>${moment.unix(weatherObj.dt).format("MM/DD/YYYY")}</h6></hgroup></div>`
-        +`<div><img id='icon' src='http://openweathermap.org/img/wn/${weatherObj.weather[0].icon}@2x.png' alt='${weatherObj.weather[0].main}: ${weatherObj.weather[0].description}'></div>`
+        +`<div><img id='icon' src='https://openweathermap.org/img/wn/${weatherObj.weather[0].icon}@2x.png' alt='${weatherObj.weather[0].main}: ${weatherObj.weather[0].description}'></div>`
         +`<div id='temp'><strong>Temperature: </strong>${Math.round(weatherObj.main.temp - 273.15)}°C</div>`
         +`<div id='humidity'><strong>Humidity: </strong>${weatherObj.main.humidity}%</div>`
         +`<div id='wind-speed'><strong>Wind Speed: </strong>${weatherObj.wind.speed}km/h</div>`
@@ -124,7 +124,7 @@ async function forecastContentBuild(selectionTarget){
         + `id='forecast-${index}'>`
             + `<div class="card-header">${moment.unix(forecastedDay.dt).format("MM/DD/YYYY")}</div>`
             + `<div class="card-body">`
-                + `<img id='icon' src='http://openweathermap.org/img/wn/${forecastedDay.weather[0].icon}@2x.png' alt='${forecastedDay.weather[0].main}: ${forecastedDay.weather[0].description}'>`
+                + `<img id='icon' src='https://openweathermap.org/img/wn/${forecastedDay.weather[0].icon}@2x.png' alt='${forecastedDay.weather[0].main}: ${forecastedDay.weather[0].description}'>`
                 + `<h5 class="card-title"><strong>Temp: </strong>${Math.round(forecastedDay.main.temp - 273.15)}°C</h5>`
                 + `<p class="card-text"><strong>Humidity:</strong> ${forecastedDay.main.humidity}%</p>`
                 + `</div>`
